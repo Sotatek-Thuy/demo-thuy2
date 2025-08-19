@@ -1,10 +1,10 @@
-catalog-info.yamlapiVersion: backstage.io/v1alpha1
+apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: "thuy-suon2"
+  name: "sydo-2"
   annotations:
     backstage.io/managed-by: scaffolder
-    github.com/project-slug: sotatek-cloudteam/backsatge-1
+    github.com/project-slug: sotatek-cloudteam/backstage-demo1-12
     backstage.io/techdocs-ref: dir:.
 spec:
   type: database
