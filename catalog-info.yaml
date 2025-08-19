@@ -1,12 +1,263 @@
 apiVersion: backstage.io/v1alpha1
 kind: Component
 metadata:
-  name: "sydo-2"
+  name: "backstage-thuysuon-api1"
   annotations:
-    backstage.io/managed-by: scaffolder
-    github.com/project-slug: sotatek-cloudteam/backstage-demo1-12
+    backstage.io/managed-by: my
+    github.com/project-slug: sotatek-cloudteam/backstage-hai-api
     backstage.io/techdocs-ref: dir:.
 spec:
   type: database
   owner: sotatek-dev-team
   lifecycle: experimental
+  dependsOn:
+    - group:default/sotatek-dev-team
+    - component:default/thuy
+    - resource:default/aws-rds
+  dependencyOf:
+    - api:default/rds-api
+  providesApis:
+    - rds-api
+
+---
+apiVersion: backstage.io/v1alpha1
+kind: API
+metadata:
+  name: rds-api
+spec:
+  type: openapi
+  lifecycle: experimental
+  owner: sotatek-dev-team
+  definition: |
+    openapi: "3.0.0"
+    info:
+      version: 1.0.0
+      title: Artist API
+      license:
+        name: MIT
+    servers:
+      - url: https://api.spotify.com/v1
+    paths:
+      /artists:
+        get:
+          summary: List All Artists
+          description: Provides a paginated list of all artists in the system.
+          parameters:
+            - name: limit
+              in: query
+              description: The number of items to return.
+              schema:
+                type: integer
+                default: 20
+            - name: offset
+              in: query
+              description: The index of the first item to return.
+              schema:
+                type: integer
+                default: 0
+          responses:
+            '200':
+              description: A list of artists.
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Artist'
+      /artists/{artistId}:
+        get:
+          summary: Get an Artist by ID
+          description: Fetches detailed information for a single artist.
+          parameters:
+            - name: artistId
+              in: path
+              required: true
+              description: The unique identifier for the artist.
+              schema:
+                type: string
+          responses:
+            '200':
+              description: The requested artist details.
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/Artist'
+            '404':
+              description: Artist not found.
+        put:
+          summary: Update an Artist
+          description: Updates the details of an existing artist.
+          parameters:
+            - name: artistId
+              in: path
+              required: true
+              description: The unique identifier for the artist.
+              schema:
+                type: string
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Artist'
+          responses:
+            '200':
+              description: The updated artist details.
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/Artist'
+            '404':
+              description: Artist not found.
+      /artists/{artistId}/albums:
+        get:
+          summary: Get Artist's Albums
+          description: Fetches a list of albums for a specific artist.
+          parameters:
+            - name: artistId
+              in: path
+              required: true
+              description: The unique identifier for the artist.
+              schema:
+                type: string
+          responses:
+            '200':
+              description: A list of the artist's albums.
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Album'
+            '404':
+              description: Artist not found.
+        post:
+          summary: Create a new album
+          description: Creates a new album for a specific artist.
+          parameters:
+            - name: artistId
+              in: path
+              required: true
+              description: The unique identifier for the artist.
+              schema:
+                type: string
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/Album'
+          responses:
+            '201':
+              description: Created
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/Album'
+      /artists/{artistId}/top-tracks:
+        get:
+          summary: Get Artist's Top Tracks
+          description: Fetches a list of the most popular tracks for a specific artist.
+          parameters:
+            - name: artistId
+              in: path
+              required: true
+              description: The unique identifier for the artist.
+              schema:
+                type: string
+            - name: market
+              in: query
+              required: true
+              description: The market (e.g., 'US', 'VN') for which to retrieve top tracks.
+              schema:
+                type: string
+          responses:
+            '200':
+              description: A list of the artist's top tracks.
+              content:
+                application/json:
+                  schema:
+                    type: array
+                    items:
+                      $ref: '#/components/schemas/Track'
+            '404':
+              description: Artist not found.
+      /artists/profile:
+        post:
+          summary: Create artist profile
+          description: Adds profile information for an artist
+          requestBody:
+            required: true
+            content:
+              application/json:
+                schema:
+                  $ref: '#/components/schemas/ArtistProfile'
+          responses:
+            '201':
+              description: Artist profile created
+              content:
+                application/json:
+                  schema:
+                    $ref: '#/components/schemas/ArtistProfile'
+            '400':
+              description: Invalid input
+    components:
+      schemas:
+        Artist:
+          type: object
+          properties:
+            id:
+              type: string
+              description: The unique Spotify ID for the artist.
+            name:
+              type: string
+              description: The name of the artist.
+            genres:
+              type: array
+              items:
+                type: string
+              description: A list of genres the artist is associated with.
+            popularity:
+              type: integer
+              description: The popularity of the artist (0-100).
+        Album:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            release_date:
+              type: string
+              format: date
+            total_tracks:
+              type: integer
+        Track:
+          type: object
+          properties:
+            id:
+              type: string
+            name:
+              type: string
+            duration_ms:
+              type: integer
+            explicit:
+              type: boolean
+        ArtistProfile:
+          type: object
+          properties:
+            artistId:
+              type: string
+              description: The ID of the artist
+            bio:
+              type: string
+              description: A short biography of the artist
+            social_links:
+              type: array
+              items:
+                type: string
+              description: List of URLs to social media
+            birth_date:
+              type: string
+              format: date
+              description: Artist's date of birth
